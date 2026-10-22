@@ -1,0 +1,1488 @@
+/* ==========================================================================
+   Liquid Glass (Graphite) for Pear Desktop (YouTube Music)
+   Muted grey, frosted glass: neutral palette, soft blur, thin edge
+   highlights.
+
+   Install: Options > Visual Tweaks > Theme > Import custom CSS file
+   Then Reload App (or restart) to apply.
+
+   Works with the built-in "Transparent Player" plugin (Mica / Acrylic /
+   Vibrancy): the page base follows the plugin's opacity slider
+   (--ytmd-transparent-player-opacity) so the native window material shows
+   through, and every glass surface keeps blurring whatever is behind it.
+
+   Quick tweaks live at the top of :root:
+     --lg-alpha        glass clarity: lower = clearer, higher = more frosted
+     --lg-main / deep / light   the grey tones (r g b)
+     --lg-queue-*      spacing of the queue panel on the player page
+   ========================================================================== */
+
+:root {
+  /* --- Quick tweaks ------------------------------------------------------ */
+  --lg-alpha: 0.5;            /* clear glass (1 = original frosted look)     */
+  --lg-main: 150 150 150;     /* neutral grey, r g b                         */
+  --lg-deep: 34 34 34;        /* darker grey for panels                      */
+  --lg-light: 214 214 214;    /* lighter grey for accents                    */
+
+  /* --- Queue panel spacing (player page) --------------------------------- */
+  --lg-queue-gap: 24px;       /* space above and below the queue panel       */
+  --lg-queue-offset: 90px;    /* where YouTube normally puts the panel,
+                                 measured down from the top bar. If the queue
+                                 sits too low/high, change this number.      */
+  --lg-chrome-top: calc(var(--menu-bar-height, 32px) + 64px); /* menu + top bar */
+  --lg-chrome-bottom: 86px;   /* floating player bar (72px) + 14px margin    */
+
+  /* --- Seek bar (top edge of the player bar) ------------------------------ */
+  --lg-seek-height: 3px;      /* line thickness (grows a little on hover)    */
+  --lg-seek-drop: 0px;        /* distance of the line from the top edge      */
+  --lg-seek-inset: calc(var(--lg-radius-l) - 1px); /* where the flat edge starts (corner radius minus 1px ring) */
+
+  /* --- Glass material ---------------------------------------------------- */
+  --lg-blur: 22px;
+  --lg-saturate: 125%;
+  --lg-fill: rgb(var(--lg-main) / calc(0.11 * var(--lg-alpha)));
+  --lg-fill-hover: rgb(var(--lg-main) / calc(0.20 * var(--lg-alpha)));
+  --lg-fill-active: rgb(var(--lg-main) / calc(0.30 * var(--lg-alpha)));
+  --lg-fill-strong: rgb(var(--lg-deep) / calc(0.62 * var(--lg-alpha)));
+  --lg-fill-popup: rgb(var(--lg-deep) / calc(0.74 * var(--lg-alpha)));
+  --lg-fill-nav: rgb(var(--lg-deep) / calc(0.55 * var(--lg-alpha)));
+  --lg-sheen: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(255, 255, 255, 0.02) 45%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  --lg-edge:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.20),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.06);
+  --lg-shadow: 0 10px 34px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --lg-ring: 1px solid rgba(255, 255, 255, 0.09);
+
+  /* --- Shape ------------------------------------------------------------- */
+  --lg-radius-s: 10px;
+  --lg-radius-m: 14px;
+  --lg-radius-l: 22px;
+
+  /* --- Backdrop ---------------------------------------------------------- */
+  /* Base colour behind everything. With the Transparent Player plugin on,
+     its opacity setting drives the alpha so Mica/Acrylic/Vibrancy shows
+     through; with the plugin off the variable is unset and this is solid. */
+  --lg-bg-rgb: 11 11 11;
+  --lg-bg-base: rgb(var(--lg-bg-rgb) / var(--ytmd-transparent-player-opacity, 1));
+  --lg-blob-1: rgb(var(--lg-main) / 0.16);
+  --lg-blob-2: rgb(var(--lg-main) / 0.12);
+  --lg-blob-3: rgb(var(--lg-main) / 0.09);
+  --lg-blob-4: rgb(var(--lg-main) / 0.15);
+
+  /* --- YouTube Music variable overrides --------------------------------- */
+  --ytmusic-general-background-a: transparent;
+  --ytmusic-general-background-b: transparent;
+  --ytmusic-general-background-c: transparent;
+  --ytmusic-brand-background-solid: transparent;
+  --ytmusic-nav-bar: transparent;
+  --ytmusic-player-bar-background: transparent;
+  --ytmusic-search-background: var(--lg-fill);
+  --yt-spec-base-background: transparent;
+  --ytmusic-background: transparent;
+  --titlebar-background-color: transparent;
+  --yt-spec-text-primary: rgba(255, 255, 255, 0.94);
+  --yt-spec-text-secondary: rgba(235, 235, 235, 0.60);
+  --yt-spec-call-to-action: rgb(var(--lg-light));
+}
+
+/* ==========================================================================
+   Backdrop: faint light pools that the glass picks up
+   ========================================================================== */
+
+html,
+html.transparent-background-color,
+html:has(body.transparent-background-color) {
+  background: var(--lg-bg-base) !important;
+  background-color: var(--lg-bg-base) !important;
+}
+
+body {
+  background: transparent !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Segoe UI Variable", "Inter", system-ui, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 18% 22%, var(--lg-blob-1), transparent 70%),
+    radial-gradient(34% 40% at 82% 18%, var(--lg-blob-2), transparent 70%),
+    radial-gradient(40% 44% at 72% 86%, var(--lg-blob-3), transparent 70%),
+    radial-gradient(36% 40% at 14% 84%, var(--lg-blob-4), transparent 70%);
+  opacity: var(--ytmd-transparent-player-opacity, 1);
+  animation: lg-drift 60s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes lg-drift {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(3%, -2%, 0) rotate(5deg) scale(1.05); }
+  100% { transform: translate3d(-3%, 3%, 0) rotate(-4deg) scale(1.02); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+}
+
+html body,
+ytmusic-app,
+ytmusic-app-layout,
+#layout,
+#content,
+ytmusic-browse-response,
+ytmusic-tabbed-search-results-renderer,
+ytmusic-search-page,
+ytmusic-player-page,
+ytmusic-player-page #main-panel {
+  background: transparent !important;
+}
+
+/* Home / browse pages: remove YouTube's thumbnail-coloured background layers
+   (the teal/blue glow). Artist headers keep their own header image. */
+#browse-page #background,
+ytmusic-browse-response #background,
+#background.immersive-background {
+  display: none !important;
+}
+
+.background-gradient.style-scope,
+.background-gradient.ytmusic-browse-response,
+ytmusic-browse-response .background-gradient,
+ytmusic-browse-response[has-background]:not([disable-gradient])
+  .background-gradient.ytmusic-browse-response {
+  background: none !important;
+}
+
+/* Album art behind the player page: desaturated and dim */
+ytmusic-fullbleed-thumbnail-renderer[is-background] .image.ytmusic-fullbleed-thumbnail-renderer {
+  filter: saturate(0.7) brightness(0.55) blur(8px);
+  opacity: 0.7;
+}
+
+/* ==========================================================================
+   Top bar: one slim frosted strip
+   ========================================================================== */
+
+ytmusic-nav-bar,
+ytmusic-app-layout > [slot="nav-bar"] {
+  height: 64px !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* No bar behind the logo / search / profile on any page: they float over the
+   page like everything else. */
+#nav-bar-background.ytmusic-app-layout,
+ytmusic-app-layout #nav-bar-background,
+ytmusic-app-layout #nav-bar-gradient,
+#nav-bar-divider.ytmusic-app-layout {
+  display: none !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Keep the search suggestions above the page content (chips, shelves) */
+ytmusic-nav-bar,
+ytmusic-app-layout > [slot="nav-bar"] {
+  z-index: 1000 !important;
+}
+
+ytmusic-search-box {
+  position: relative;
+  z-index: 1001;
+}
+
+/* Top row as a simple flex line: [menu button + logo] [search] ... [buttons].
+   The search can never slide under the logo when the window is resized. */
+html body ytmusic-nav-bar {
+  display: flex !important;
+  align-items: center !important;
+}
+
+html body ytmusic-nav-bar ytmusic-logo,
+html body ytmusic-nav-bar a.ytmusic-logo,
+html body ytmusic-nav-bar .left-content a {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+}
+
+html body ytmusic-nav-bar .left-content {
+  position: static !important;
+  min-width: 176px !important; /* menu button + logo always get their room */
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  margin-right: 28px !important;
+}
+
+html body ytmusic-nav-bar .center-content {
+  position: static !important;
+  flex: 0 1 480px !important;
+  min-width: 200px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+html body ytmusic-nav-bar ytmusic-search-box {
+  position: relative !important;
+  left: auto !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 480px !important;
+}
+
+html body ytmusic-nav-bar .right-content {
+  position: static !important;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
+
+/* YouTube Music logo: monochrome, no bubble.
+   Every wrapper around the logo is reset so no pill/box can appear behind it.
+   (Delete the `filter` line to keep the red icon.) */
+ytmusic-nav-bar .left-content,
+ytmusic-nav-bar .left-content a,
+ytmusic-nav-bar ytmusic-logo,
+ytmusic-nav-bar ytmusic-logo a,
+ytmusic-nav-bar a.ytmusic-logo {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 0 !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Keep the logo clear of the sidebar edge */
+ytmusic-nav-bar ytmusic-logo,
+ytmusic-nav-bar a.ytmusic-logo {
+  margin-left: 14px !important;
+  margin-right: 0 !important;
+}
+
+ytmusic-nav-bar .left-content img,
+ytmusic-nav-bar ytmusic-logo img {
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: grayscale(1) brightness(1.2);
+}
+
+/* In-app menu title bar (File / Plugins / Options...): let it be glass too */
+html body nav.title-bar,
+html body .title-bar {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   Sidebar
+   ========================================================================== */
+
+ytmusic-app-layout #guide-wrapper,
+ytmusic-guide-renderer,
+tp-yt-app-drawer#guide {
+  background: transparent !important;
+}
+
+/* No panel behind Home / Explore / Library / Upgrade: it is part of the page */
+tp-yt-app-drawer#guide #contentContainer,
+ytmusic-app-layout #mini-guide,
+ytmusic-app-layout #mini-guide-background,
+ytmusic-app-layout #guide-wrapper,
+ytmusic-app-layout #mini-guide #items {
+  background: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+ytmusic-guide-renderer #sections,
+ytmusic-app-layout #mini-guide #items {
+  padding-top: 10px;
+}
+
+ytmusic-guide-entry-renderer tp-yt-paper-item {
+  border-radius: var(--lg-radius-m) !important;
+  margin: 2px 8px;
+  transition: background 0.25s ease;
+}
+
+ytmusic-guide-entry-renderer tp-yt-paper-item:hover {
+  background: var(--lg-fill-hover) !important;
+}
+
+ytmusic-guide-entry-renderer[active] tp-yt-paper-item,
+ytmusic-guide-entry-renderer.iron-selected tp-yt-paper-item {
+  background: var(--lg-fill-active) !important;
+  box-shadow: var(--lg-edge);
+}
+
+/* ==========================================================================
+   Player bar: floats edge to edge with equal side margins
+   ========================================================================== */
+
+html body ytmusic-player-bar {
+  position: fixed !important;
+  left: 16px !important;
+  right: 16px !important;
+  bottom: 14px !important;
+  width: auto !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: var(--lg-radius-l) !important;
+  background: var(--lg-sheen), rgb(var(--lg-deep) / 0.72) !important;
+  backdrop-filter: blur(calc(var(--lg-blur) + 14px)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--lg-blur) + 14px)) saturate(var(--lg-saturate));
+  border: var(--lg-ring) !important;
+  box-shadow: var(--lg-edge), var(--lg-shadow) !important;
+}
+
+/* No second, darker box behind the controls: the bar itself is the only
+   glass. Every inner section is reset (the play button bubble is styled
+   separately below). */
+html body ytmusic-player-bar .left-controls,
+html body ytmusic-player-bar .middle-controls,
+html body ytmusic-player-bar .right-controls,
+html body ytmusic-player-bar .middle-controls-buttons,
+html body ytmusic-player-bar .player-bar-controls,
+html body ytmusic-player-bar .content-info-wrapper,
+html body ytmusic-player-bar .song-info,
+html body ytmusic-player-bar #left-controls,
+html body ytmusic-player-bar #right-controls,
+html body ytmusic-player-bar .volume-slider,
+html body ytmusic-player-bar tp-yt-paper-icon-button:not(.play-pause-button),
+html body ytmusic-player-bar yt-icon-button,
+html body ytmusic-player-bar ytmusic-like-button-renderer,
+html body ytmusic-player-bar ytmusic-menu-renderer,
+html body ytmusic-player-bar::before,
+html body ytmusic-player-bar::after {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Catch-all: any other container inside the bar (this is the square box
+   spanning the whole row behind the controls). The seek bar, volume slider
+   parts and the knob are excluded because they need their own colours. */
+html body ytmusic-player-bar > :not(#progress-bar),
+html body ytmusic-player-bar > :not(#progress-bar) > :not(#volume-slider):not(#expand-volume-slider):not(.play-pause-button),
+html body ytmusic-player-bar div:not(#progress-bar):not(#progress-bar *):not(#volume-slider *):not(#expand-volume-slider *):not(.slider-knob-inner),
+html body ytmusic-player-bar div:not(#progress-bar):not(#progress-bar *)::before,
+html body ytmusic-player-bar div:not(#progress-bar):not(#progress-bar *)::after {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Nuclear option for the dark box behind the controls: EVERY element inside
+   the bar (any tag, any class) and its ::before / ::after is made fully
+   transparent. Only these keep their own look: the seek bar, the volume
+   slider, the round play button and the thumbnail/pictures. */
+html body ytmusic-player-bar *:not(#progress-bar):not(#progress-bar *):not(#volume-slider):not(#volume-slider *):not(#expand-volume-slider):not(#expand-volume-slider *):not(.play-pause-button):not(.play-pause-button *):not(img):not(yt-img-shadow):not(yt-img-shadow *),
+html body ytmusic-player-bar *:not(#progress-bar):not(#progress-bar *):not(#volume-slider *):not(#expand-volume-slider *):not(.play-pause-button *):not(img)::before,
+html body ytmusic-player-bar *:not(#progress-bar):not(#progress-bar *):not(#volume-slider *):not(#expand-volume-slider *):not(.play-pause-button *):not(img)::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body ytmusic-player-bar tp-yt-paper-icon-button:not(.play-pause-button):not(#x1):not(#x2):not(#x3):not(#x4):not(#x5):not(#x6):not(#x7):not(#x8):hover,
+html body ytmusic-player-bar yt-icon-button:not(#x1):not(#x2):not(#x3):not(#x4):not(#x5):not(#x6):not(#x7):not(#x8):hover {
+  background-color: var(--lg-fill-hover) !important;
+  border-radius: 50% !important;
+}
+
+/* Seek bar: sits on the top edge of the player bar. The straight part starts
+   exactly where the corner curve ends (inset = corner radius), so the line is
+   tangent to the corners; the knob at 0% / 100% stays inside the bar. */
+html body ytmusic-player-bar #progress-bar {
+  position: absolute !important;
+  top: 0 !important;
+  left: var(--lg-seek-inset) !important;
+  right: var(--lg-seek-inset) !important;
+  bottom: auto !important;
+  width: auto !important;
+  height: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  z-index: 3;
+}
+
+/* Curved ends: a quarter-ring on each side that hugs the bar's rounded
+   corner, so the line flows from the flat top edge round the corner. */
+html body ytmusic-player-bar #progress-bar,
+html body ytmusic-player-bar #progress-bar #sliderContainer {
+  overflow: visible !important;
+}
+
+html body ytmusic-player-bar #progress-bar::before,
+html body ytmusic-player-bar #progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--lg-seek-inset);
+  height: var(--lg-seek-inset);
+  box-sizing: border-box;
+  pointer-events: none;
+  border: 0 solid rgba(255, 255, 255, 0.16);
+}
+
+html body ytmusic-player-bar #progress-bar::before {
+  left: calc(-1 * var(--lg-seek-inset));
+  border-top-width: var(--lg-seek-height);
+  border-left-width: var(--lg-seek-height);
+  border-top-left-radius: var(--lg-seek-inset);
+}
+
+html body ytmusic-player-bar #progress-bar::after {
+  right: calc(-1 * var(--lg-seek-inset));
+  border-top-width: var(--lg-seek-height);
+  border-right-width: var(--lg-seek-height);
+  border-top-right-radius: var(--lg-seek-inset);
+}
+
+html body ytmusic-player-bar #progress-bar #sliderContainer {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body ytmusic-player-bar #progress-bar #sliderBar {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+}
+
+html body ytmusic-player-bar #progress-bar #progressContainer {
+  position: absolute !important;
+  top: var(--lg-seek-drop) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: var(--lg-seek-height) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.16) !important;
+  transition: height 0.18s ease;
+}
+
+html body ytmusic-player-bar #progress-bar #primaryProgress,
+html body ytmusic-player-bar #progress-bar #secondaryProgress {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform-origin: left center;
+}
+
+html body ytmusic-player-bar #progress-bar #secondaryProgress {
+  background: rgba(255, 255, 255, 0.26) !important;
+}
+
+html body ytmusic-player-bar:hover #progress-bar #progressContainer,
+html body ytmusic-player-bar #progress-bar[dragging] #progressContainer,
+html body ytmusic-player-bar #progress-bar[focused] #progressContainer {
+  height: calc(var(--lg-seek-height) + 2px) !important;
+}
+
+/* Knob: only while hovering / dragging. Its box and inner dot get explicit
+   sizes so the dot is centred exactly on the line (vertically) and on the
+   fill's end (horizontally). */
+html body ytmusic-player-bar #progress-bar #sliderKnob {
+  top: calc(var(--lg-seek-drop) + var(--lg-seek-height) / 2 - 13px) !important;
+  margin-top: 0 !important;
+  margin-left: -13px !important;
+  width: 26px !important;
+  height: 26px !important;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+html body ytmusic-player-bar #progress-bar #sliderKnob .slider-knob-inner,
+html body ytmusic-player-bar #progress-bar .slider-knob-inner.tp-yt-paper-slider {
+  position: absolute !important;
+  inset: 0 !important;
+  margin: auto !important;
+  width: 12px !important;
+  height: 12px !important;
+  transform: none !important;
+  border-radius: 50% !important;
+}
+
+html body ytmusic-player-bar #progress-bar #sliderKnob .slider-knob-inner::before {
+  display: none !important;
+}
+
+html body ytmusic-player-bar:hover #progress-bar #sliderKnob,
+html body ytmusic-player-bar #progress-bar[dragging] #sliderKnob,
+html body ytmusic-player-bar #progress-bar[focused] #sliderKnob {
+  opacity: 1;
+}
+
+/* The solid strip YouTube draws behind the player bar: gone, so the page
+   shows around the floating glass bar. */
+ytmusic-app-layout #player-bar-background,
+#player-bar-background.ytmusic-app-layout,
+ytmusic-app-layout > [slot="player-bar"]:not(ytmusic-player-bar) {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: none !important;
+}
+
+/* Play / pause: glass bubble */
+ytmusic-player-bar .play-pause-button.ytmusic-player-bar {
+  background: var(--lg-sheen), rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  box-shadow: var(--lg-edge), 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1), background 0.2s ease;
+}
+
+ytmusic-player-bar .play-pause-button.ytmusic-player-bar:hover {
+  background: var(--lg-sheen), rgba(255, 255, 255, 0.20);
+  transform: scale(1.06);
+}
+
+ytmusic-player-bar .play-pause-button.ytmusic-player-bar:active {
+  transform: scale(0.95);
+}
+
+ytmusic-player-bar tp-yt-paper-icon-button {
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+ytmusic-player-bar tp-yt-paper-icon-button:hover {
+  background: var(--lg-fill-hover);
+}
+
+/* Progress and volume sliders: white everywhere, including the knob
+   (YouTube turns the knob red on hover / focus / drag). */
+ytmusic-player-bar #progress-bar,
+ytmusic-player-bar #progress-bar.ytmusic-player-bar,
+ytmusic-player-bar #progress-bar.ytmusic-player-bar[focused],
+ytmusic-player-bar #progress-bar.ytmusic-player-bar[dragging],
+ytmusic-player-bar:hover #progress-bar.ytmusic-player-bar,
+ytmusic-player-bar #volume-slider,
+ytmusic-player-bar #expand-volume-slider {
+  --paper-slider-active-color: #ffffff !important;
+  --paper-slider-knob-color: #ffffff !important;
+  --paper-slider-knob-start-color: #ffffff !important;
+  --paper-slider-knob-start-border-color: #ffffff !important;
+  --paper-slider-pin-color: #ffffff !important;
+  --paper-slider-pin-start-color: #ffffff !important;
+  --paper-slider-container-color: rgba(255, 255, 255, 0.18) !important;
+  --paper-slider-secondary-color: rgba(255, 255, 255, 0.28) !important;
+  --paper-progress-active-color: #ffffff !important;
+  --paper-slider-disabled-knob-color: #ffffff !important;
+}
+
+ytmusic-player-bar .slider-knob-inner.tp-yt-paper-slider,
+ytmusic-player-bar #sliderKnob .slider-knob-inner,
+ytmusic-player-bar #progress-bar .slider-knob-inner {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+ytmusic-player-bar .slider-knob-inner.tp-yt-paper-slider::before {
+  background-color: #ffffff !important;
+}
+
+ytmusic-player-bar #progress-bar #primaryProgress,
+ytmusic-player-bar #progress-bar #sliderBar #primaryProgress {
+  background: #ffffff !important;
+}
+
+/* Toggles (e.g. Autoplay) follow the accent instead of bright blue */
+tp-yt-paper-toggle-button {
+  --paper-toggle-button-checked-bar-color: rgb(var(--lg-light));
+  --paper-toggle-button-checked-button-color: rgb(var(--lg-light));
+  --paper-toggle-button-checked-ink-color: rgb(var(--lg-light));
+}
+
+/* ==========================================================================
+   Search, chips, tabs
+   ========================================================================== */
+
+ytmusic-search-box,
+ytmusic-search-box .search-box.ytmusic-search-box,
+ytmusic-search-box:not([is-mobile-view]) .search-box.ytmusic-search-box {
+  border-radius: 999px !important;
+}
+
+ytmusic-search-box .search-box.ytmusic-search-box,
+ytmusic-search-box:not([is-mobile-view]) .search-box.ytmusic-search-box {
+  background: var(--lg-sheen), var(--lg-fill) !important;
+  backdrop-filter: blur(16px) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(16px) saturate(var(--lg-saturate));
+  border: var(--lg-ring) !important;
+  box-shadow: var(--lg-edge) !important;
+  outline: none !important;
+  transition: background 0.2s ease;
+}
+
+ytmusic-search-box .search-box.ytmusic-search-box:focus-within,
+ytmusic-search-box[opened] .search-box.ytmusic-search-box {
+  background: var(--lg-sheen), var(--lg-fill-hover) !important;
+}
+
+/* The square box that appears when the search is focused: focus rings,
+   ripples, underlines and inner backgrounds are all switched off. The only
+   visible shape is the pill above. */
+/* The host and every wrapper stay invisible: .search-box is the one bubble */
+ytmusic-search-box,
+ytmusic-search-box .search-container,
+ytmusic-search-box .search-container.ytmusic-search-box,
+ytmusic-search-box[opened] .search-container.ytmusic-search-box,
+ytmusic-search-box #layout,
+ytmusic-search-box #input-container {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+ytmusic-search-box,
+ytmusic-search-box * {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+ytmusic-search-box tp-yt-paper-input,
+ytmusic-search-box tp-yt-paper-input-container,
+ytmusic-search-box iron-input,
+ytmusic-search-box input,
+ytmusic-search-box #input-box,
+ytmusic-search-box #input-wrapper,
+ytmusic-search-box #inputContainer,
+ytmusic-search-box .input-content,
+ytmusic-search-box #icon,
+ytmusic-search-box #clear-button,
+ytmusic-search-box #search-icon {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+ytmusic-search-box tp-yt-paper-ripple,
+ytmusic-search-box paper-ripple,
+ytmusic-search-box .underline,
+ytmusic-search-box #underline,
+ytmusic-search-box .focus-ring,
+ytmusic-search-box #focus-ring,
+ytmusic-search-box .unfocused-line,
+ytmusic-search-box .focused-line,
+ytmusic-search-box .input-focus-ring {
+  display: none !important;
+}
+
+ytmusic-search-box tp-yt-paper-icon-button,
+ytmusic-search-box yt-icon-button {
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+ytmusic-search-box tp-yt-paper-icon-button:hover,
+ytmusic-search-box yt-icon-button:hover {
+  background: var(--lg-fill-hover) !important;
+}
+
+/* Suggestions dropdown: ONE bubble (#suggestions). Everything inside it is
+   reset, otherwise the list draws a second bubble on top of the first. */
+ytmusic-search-box #suggestions {
+  background: var(--lg-sheen), rgb(var(--lg-deep) / 0.78) !important;
+  backdrop-filter: blur(30px) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(30px) saturate(var(--lg-saturate));
+  border: var(--lg-ring) !important;
+  border-radius: var(--lg-radius-l) !important;
+  box-shadow: var(--lg-edge) !important;   /* thin highlight only: no drop shadow */
+  filter: none !important;
+  overflow: hidden;
+  z-index: 2147483000;
+}
+
+ytmusic-search-box #suggestions *,
+ytmusic-search-box #suggestion-list,
+ytmusic-search-box ytmusic-search-suggestions-section,
+ytmusic-search-box ytmusic-search-suggestions-section * {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+ytmusic-search-box #suggestions {
+  padding: 6px 0;
+}
+
+/* No shadow anywhere in the search results: the dropdown, the result rows
+   under it, and any popup wrapper YouTube puts them in. */
+ytmusic-search-box #suggestions,
+ytmusic-search-box #suggestions *,
+ytmusic-search-box ytmusic-search-suggestions-section,
+ytmusic-search-box ytmusic-search-suggestions-section *,
+ytmusic-search-box ytmusic-search-suggestion,
+ytmusic-search-box ytmusic-responsive-list-item-renderer,
+ytmusic-search-box .search-container,
+ytmusic-search-box .search-container * {
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+ytmusic-search-box #suggestions *,
+ytmusic-search-box ytmusic-search-suggestions-section,
+ytmusic-search-box ytmusic-search-suggestions-section *,
+ytmusic-search-box ytmusic-search-suggestion,
+ytmusic-search-box ytmusic-responsive-list-item-renderer {
+  box-shadow: none !important;
+}
+
+ytmusic-search-box #suggestions ytmusic-search-suggestion:hover,
+ytmusic-search-box #suggestions ytmusic-search-suggestion[selected],
+ytmusic-search-box #suggestions .suggestion:hover,
+ytmusic-search-box #suggestions .suggestion[selected] {
+  background: var(--lg-fill-active) !important;
+  border-radius: var(--lg-radius-s) !important;
+}
+
+/* Chips: exactly ONE pill per chip (the link). Everything inside is reset. */
+ytmusic-chip-cloud-chip-renderer a.ytmusic-chip-cloud-chip-renderer {
+  background: var(--lg-sheen), var(--lg-fill-hover) !important;
+  border: var(--lg-ring) !important;
+  border-radius: 999px !important;
+  box-shadow: var(--lg-edge);
+  transition: background 0.2s ease;
+}
+
+ytmusic-chip-cloud-chip-renderer a.ytmusic-chip-cloud-chip-renderer * {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+ytmusic-chip-cloud-chip-renderer:hover a.ytmusic-chip-cloud-chip-renderer {
+  background: var(--lg-sheen), var(--lg-fill-active) !important;
+}
+
+ytmusic-chip-cloud-chip-renderer[is-selected] a.ytmusic-chip-cloud-chip-renderer {
+  background: rgba(255, 255, 255, 0.90) !important;
+  color: #0b0b0d !important;
+}
+
+ytmusic-chip-cloud-chip-renderer[is-selected] a.ytmusic-chip-cloud-chip-renderer * {
+  color: #0b0b0d !important;
+}
+
+/* No darker band behind the YT MUSIC / LIBRARY tabs: same as the page */
+ytmusic-tabs,
+ytmusic-tabs.stuck,
+ytmusic-tabs #tabs,
+ytmusic-tabs .tab-header-container,
+ytmusic-tabbed-search-results-renderer ytmusic-tabs,
+ytmusic-tabbed-search-results-renderer #tabs-container,
+ytmusic-tabbed-search-results-renderer .tab-header-container {
+  background: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-bottom-color: transparent !important;
+}
+
+/* ==========================================================================
+   Menus, popups, dialogs
+   ========================================================================== */
+
+ytmusic-menu-popup-renderer,
+ytmusic-multi-page-menu-renderer,
+ytmusic-dialog,
+tp-yt-paper-dialog,
+tp-yt-paper-listbox,
+ytmusic-unified-share-panel-renderer {
+  background: var(--lg-sheen), var(--lg-fill-popup) !important;
+  backdrop-filter: blur(calc(var(--lg-blur) + 6px)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--lg-blur) + 6px)) saturate(var(--lg-saturate));
+  border: var(--lg-ring) !important;
+  border-radius: var(--lg-radius-l) !important;
+  box-shadow: var(--lg-edge), var(--lg-shadow) !important;
+}
+
+ytmusic-menu-service-item-renderer:hover,
+ytmusic-toggle-menu-service-item-renderer:hover,
+ytmusic-menu-navigation-item-renderer:hover {
+  background: var(--lg-fill-hover) !important;
+  border-radius: var(--lg-radius-s);
+}
+
+/* ==========================================================================
+   Content: cards, rows
+   ========================================================================== */
+
+/* Thumbnails: ONE rounded shape per picture. The wrapper carries the shadow;
+   everything inside it (image, hover overlay with the play button, the
+   zooming image) is clipped to the same radius, so nothing square shows. */
+ytmusic-two-row-item-renderer .image-wrapper,
+ytmusic-responsive-list-item-renderer .thumbnail-image-wrapper,
+ytmusic-detail-header-renderer .image,
+ytmusic-immersive-header-renderer .image {
+  border-radius: var(--lg-radius-m) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+ytmusic-two-row-item-renderer yt-img-shadow,
+ytmusic-responsive-list-item-renderer yt-img-shadow,
+ytmusic-player-queue-item yt-img-shadow,
+ytmusic-two-row-item-renderer ytmusic-thumbnail-renderer,
+ytmusic-responsive-list-item-renderer ytmusic-thumbnail-renderer,
+ytmusic-two-row-item-renderer ytmusic-item-thumbnail-overlay-renderer,
+ytmusic-responsive-list-item-renderer ytmusic-item-thumbnail-overlay-renderer,
+ytmusic-player-queue-item ytmusic-item-thumbnail-overlay-renderer,
+ytmusic-two-row-item-renderer .thumbnail-overlay,
+ytmusic-two-row-item-renderer #thumbnail,
+ytmusic-two-row-item-renderer .thumbnail {
+  border-radius: var(--lg-radius-m) !important;
+  overflow: hidden !important;
+  clip-path: inset(0 round var(--lg-radius-m));
+  -webkit-clip-path: inset(0 round var(--lg-radius-m));
+  box-shadow: none !important;
+}
+
+ytmusic-two-row-item-renderer .image-wrapper {
+  overflow: hidden !important;
+}
+
+ytmusic-two-row-item-renderer img,
+ytmusic-responsive-list-item-renderer img,
+ytmusic-player-queue-item img {
+  border-radius: inherit;
+}
+
+/* The hover overlay's own dark layer (and the click ripple / focus box) */
+ytmusic-two-row-item-renderer ytmusic-item-thumbnail-overlay-renderer .content,
+ytmusic-two-row-item-renderer ytmusic-item-thumbnail-overlay-renderer #content,
+ytmusic-responsive-list-item-renderer ytmusic-item-thumbnail-overlay-renderer .content {
+  border-radius: var(--lg-radius-m) !important;
+}
+
+/* No square behind / around an item card */
+ytmusic-two-row-item-renderer,
+ytmusic-two-row-item-renderer #content,
+ytmusic-two-row-item-renderer .details,
+ytmusic-two-row-item-renderer a,
+ytmusic-two-row-item-renderer:focus,
+ytmusic-two-row-item-renderer:focus-visible,
+ytmusic-two-row-item-renderer :focus,
+ytmusic-two-row-item-renderer :focus-visible {
+  background: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+ytmusic-two-row-item-renderer tp-yt-paper-ripple,
+ytmusic-responsive-list-item-renderer tp-yt-paper-ripple {
+  display: none !important;
+}
+
+ytmusic-two-row-item-renderer {
+  border-radius: var(--lg-radius-m) !important;
+}
+
+/* Hover: no zoom of the whole card. Only the picture zooms, inside its own
+   rounded clip, so the edges stay curved while it grows. */
+ytmusic-two-row-item-renderer:hover {
+  transform: none !important;
+}
+
+ytmusic-two-row-item-renderer .image-wrapper img,
+ytmusic-two-row-item-renderer yt-img-shadow img {
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+  transform-origin: center;
+}
+
+ytmusic-two-row-item-renderer:hover .image-wrapper img,
+ytmusic-two-row-item-renderer:hover yt-img-shadow img {
+  transform: scale(1.06);
+}
+
+ytmusic-responsive-list-item-renderer,
+ytmusic-player-queue-item {
+  border-radius: var(--lg-radius-m) !important;
+  border-bottom: none !important;
+  transition: background 0.2s ease;
+}
+
+ytmusic-responsive-list-item-renderer:hover,
+ytmusic-player-queue-item:hover {
+  background: var(--lg-fill-hover) !important;
+}
+
+ytmusic-player-queue-item[selected],
+ytmusic-responsive-list-item-renderer[play-button-state="playing"],
+ytmusic-responsive-list-item-renderer[play-button-state="paused"] {
+  background: var(--lg-fill-active) !important;
+  box-shadow: var(--lg-edge);
+}
+
+/* ==========================================================================
+   Player page: artwork and queue panel
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Video mode: the video keeps a rounded, clipped frame (no black box, no
+   shadow, no square hover gradients at the corners).
+   -------------------------------------------------------------------------- */
+
+ytmusic-player-page #song-video,
+ytmusic-player-page #song-video .html5-video-player,
+ytmusic-player-page #song-video #movie_player,
+ytmusic-player-page #song-video .html5-video-container,
+ytmusic-player-page #player-wrapper,
+ytmusic-player-page ytmusic-player,
+ytmusic-player-page ytmusic-player #player,
+ytmusic-player-page #main-panel .content {
+  background: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+ytmusic-player-page #song-video {
+  border-radius: var(--lg-radius-l) !important;
+  overflow: hidden !important;
+  clip-path: inset(0 round var(--lg-radius-l));
+  -webkit-clip-path: inset(0 round var(--lg-radius-l));
+}
+
+ytmusic-player-page .ytp-gradient-top,
+ytmusic-player-page .ytp-gradient-bottom,
+ytmusic-player-page .ytp-chrome-top::before,
+ytmusic-player-page .ytp-chrome-bottom::before {
+  display: none !important;
+  background: none !important;
+}
+
+ytmusic-player-page #song-video video,
+ytmusic-player-page #song-video .html5-video-player,
+ytmusic-player-page #song-video .html5-video-container,
+ytmusic-player-page #song-video .ytp-chrome-top,
+ytmusic-player-page #song-video .ytp-chrome-bottom {
+  border-radius: var(--lg-radius-l) !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   Vinyl turntable (audio mode), pure CSS
+   The album art box becomes a record on a turntable: a matte plinth with a
+   platter rim, buttons and a tonearm, all drawn around the art box.
+
+   - The cover is the label in the middle of a grooved black record.
+   - Music playing: the label spins and the tonearm swings onto the record.
+     Paused: the label stops where it is and the arm swings back to its rest.
+   - The cover art is the whole record (a picture disc), with grooves over it.
+
+   Not possible in CSS (so left out): following the song's progress with the
+   arm, and dragging to rotate.
+
+   Quick tweaks:
+     --lg-vinyl-label   cover size on the record (100% = whole record,
+                        38% = classic centre label)
+     --lg-vinyl-spin    seconds per turn (lower = faster)
+     --lg-tt-scale      overall turntable size
+   ========================================================================== */
+
+:root {
+  --lg-vinyl-label: 100%;
+  --lg-vinyl-spin: 3.6s;
+  --lg-tt-scale: 0.82;
+  --lg-tt-tilt: 24deg;        /* viewing angle (same with or without hover) */
+  --lg-tt-arm-rest: 3deg;     /* tonearm parked */
+  --lg-tt-arm-play: 23deg;    /* tonearm on the record */
+  --lg-tt-arm-time: 1.6s;     /* tonearm swing back to its rest (pause) */
+  --lg-tt-arm-time-play: 0.7s; /* tonearm swing onto the record (play) */
+}
+
+@keyframes lg-vinyl-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- The turntable body: the player box itself ---------------------------
+   It is tilted in 3D. The plinth (::before) and tonearm (::after) are drawn
+   around it; the record (#song-image) sits on top. The transform also makes
+   it the anchor for the plinth and arm, so YouTube's layout is untouched. */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) {
+  overflow: visible !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  transform-style: preserve-3d;
+  transform-origin: 63.5% 50%;
+  transform:
+    perspective(1800px)
+    translateX(-13.5%)
+    rotateX(var(--lg-tt-tilt))
+    scale3d(var(--lg-tt-scale), var(--lg-tt-scale), var(--lg-tt-scale));
+}
+
+/* Ancestors must not clip the parts drawn outside the art box */
+ytmusic-player-page:not([video-mode]) #main-panel,
+ytmusic-player-page:not([video-mode]) #main-panel > .content,
+ytmusic-player-page:not([video-mode]) #player-wrapper {
+  overflow: visible !important;
+  clip-path: none !important;
+}
+
+/* Plinth: matte navy body with the platter well and rim, the tonearm base,
+   arm rest, two buttons and a speed switch. */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"])::before {
+  content: "";
+  position: absolute;
+  left: -9%;
+  top: -8.5%;
+  width: 145%;
+  height: 117%;
+  pointer-events: auto;
+  border-radius: 2.1%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 145 117' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='t' x1='0' y1='0' x2='.35' y2='1'%3E%3Cstop offset='0' stop-color='%232f384d'/%3E%3Cstop offset='.5' stop-color='%23232b3d'/%3E%3Cstop offset='1' stop-color='%231a2130'/%3E%3C/linearGradient%3E%3CradialGradient id='w'%3E%3Cstop offset='.92' stop-color='%230a0d12'/%3E%3Cstop offset='1' stop-color='%230a0d12' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='c' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f4f6f9'/%3E%3Cstop offset='.5' stop-color='%23959ba5'/%3E%3Cstop offset='1' stop-color='%23e6e9ee'/%3E%3C/linearGradient%3E%3CradialGradient id='b' cx='.4' cy='.35'%3E%3Cstop offset='0' stop-color='%233b404b'/%3E%3Cstop offset='1' stop-color='%2313161b'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect x='.3' y='.3' width='144.4' height='116.4' rx='3' fill='url(%23t)' stroke='%23ffffff' stroke-opacity='.10' stroke-width='.35'/%3E%3Crect x='1.5' y='114.7' width='142' height='1.6' rx='.8' fill='%23000' fill-opacity='.35'/%3E%3Ccircle cx='59' cy='58.5' r='55' fill='url(%23w)'/%3E%3Ccircle cx='59' cy='58.5' r='51.1' fill='none' stroke='url(%23c)' stroke-width='1.3'/%3E%3Ccircle cx='59' cy='58.5' r='51.9' fill='none' stroke='%23fff' stroke-opacity='.6' stroke-width='.25'/%3E%3Ccircle cx='127.6' cy='13.4' r='6.4' fill='%23000' fill-opacity='.35'/%3E%3Ccircle cx='127' cy='12.5' r='5.6' fill='url(%23b)'/%3E%3Ccircle cx='127' cy='12.5' r='3.8' fill='url(%23c)'/%3E%3Ccircle cx='127' cy='12.5' r='2.4' fill='%231a1d23'/%3E%3Ccircle cx='123.6' cy='78.5' r='1.6' fill='%230c0e12'/%3E%3Ccircle cx='123.6' cy='78.5' r='.95' fill='%233b404a'/%3E%3Ccircle cx='138' cy='48.5' r='2.1' fill='url(%23c)'/%3E%3Ccircle cx='138' cy='48.5' r='1.35' fill='%2315171c'/%3E%3Ccircle cx='138' cy='57' r='1.35' fill='%23101216'/%3E%3Ccircle cx='137.7' cy='56.6' r='.5' fill='%233a3e47'/%3E%3Crect x='136.3' y='63.5' width='3.4' height='1.7' rx='.5' fill='%230e1014'/%3E%3Crect x='136.6' y='63.8' width='1.3' height='1.1' rx='.3' fill='%234a4f59'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 16px 22px rgb(0 0 0 / 0.55));
+  transform: translateZ(-2px);
+}
+
+/* Tonearm: pivots at its base on the right of the plinth */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"])::after {
+  content: "";
+  position: absolute;
+  left: 114.5%;
+  top: -2%;
+  width: 7%;
+  height: 88%;
+  z-index: 4;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 88' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='d' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23111317'/%3E%3Cstop offset='.45' stop-color='%234a4f5a'/%3E%3Cstop offset='1' stop-color='%23111317'/%3E%3C/linearGradient%3E%3ClinearGradient id='c' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%238f959f'/%3E%3Cstop offset='.5' stop-color='%23f1f3f6'/%3E%3Cstop offset='1' stop-color='%238f959f'/%3E%3C/linearGradient%3E%3ClinearGradient id='u' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%2314161b'/%3E%3Cstop offset='.45' stop-color='%236a707b'/%3E%3Cstop offset='1' stop-color='%2314161b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='.8' y='.2' width='5.4' height='4.6' rx='.8' fill='url(%23d)'/%3E%3Crect x='.7' y='3.5' width='5.6' height='.55' fill='url(%23c)'/%3E%3Crect x='3.05' y='4.4' width='.9' height='2' fill='url(%23c)'/%3E%3Ccircle cx='3.5' cy='6' r='2.6' fill='url(%23c)'/%3E%3Ccircle cx='3.5' cy='6' r='2' fill='%231c1f25'/%3E%3Ccircle cx='3.5' cy='6' r='.7' fill='url(%23c)'/%3E%3Crect x='2.85' y='8.2' width='1.3' height='64.5' rx='.65' fill='url(%23u)'/%3E%3Crect x='2.6' y='46' width='1.8' height='1.1' fill='url(%23c)'/%3E%3Cg transform='rotate(-14 3.5 72)'%3E%3Crect x='1.5' y='71.4' width='4' height='9.6' rx='.8' fill='url(%23d)'/%3E%3Crect x='2.1' y='76.6' width='2.8' height='4.8' rx='.4' fill='%2325282f'/%3E%3Crect x='5.35' y='72.2' width='.4' height='2.8' fill='url(%23c)'/%3E%3Crect x='3.3' y='81.2' width='.4' height='1.4' fill='%23d5d9df'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  filter: drop-shadow(4px 9px 5px rgb(0 0 0 / 0.5));
+  transform-origin: 50% 6.82%;
+  transform: translateZ(22px) rotate(var(--lg-tt-arm-rest));
+  transition: transform var(--lg-tt-arm-time) cubic-bezier(0.45, 0, 0.2, 1) !important;
+  will-change: transform;
+}
+
+/* --- The record: the (square) art box turned into a disc ------------------ */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image {
+  position: relative !important;
+  border-radius: 50% !important;
+  overflow: visible !important;
+  transform-style: preserve-3d;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  background-color: #0b0b0c !important;
+  background-image:
+    /* lead-in and dead-wax rings */
+    radial-gradient(circle at center,
+      transparent 0 calc(var(--lg-vinyl-label) / 2 + 4%),
+      rgb(255 255 255 / 0.05) calc(var(--lg-vinyl-label) / 2 + 4%) calc(var(--lg-vinyl-label) / 2 + 4.6%),
+      transparent calc(var(--lg-vinyl-label) / 2 + 4.6%) 100%),
+    /* track gaps */
+    radial-gradient(circle at center,
+      transparent 0 58%, rgb(255 255 255 / 0.06) 58% 58.5%, transparent 58.5% 70%,
+      rgb(255 255 255 / 0.06) 70% 70.5%, transparent 70.5% 81%,
+      rgb(255 255 255 / 0.06) 81% 81.5%, transparent 81.5% 100%),
+    /* fine grooves */
+    repeating-radial-gradient(circle at center,
+      rgb(255 255 255 / 0.035) 0 1px, rgb(0 0 0 / 0.25) 1px 3px),
+    /* base: slightly lighter in the middle, darker toward the rim */
+    radial-gradient(circle at center, #1d1d20 0%, #0d0d0f 55%, #151517 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.10),
+    inset 0 0 0 7px rgb(0 0 0 / 0.40),
+    inset 0 0 40px rgb(0 0 0 / 0.55),
+    0 3px 6px rgb(0 0 0 / 0.5) !important;
+  transform: translateZ(3px);
+}
+
+/* Everything inside the record is see-through except the label below. */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image * {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Sheen: two soft light streaks across the grooves. It does not spin with
+   the record, like light from a fixed lamp. */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    conic-gradient(from 28deg,
+      transparent 0deg, rgb(255 255 255 / 0.13) 24deg, transparent 56deg,
+      transparent 180deg, rgb(255 255 255 / 0.13) 204deg, transparent 236deg,
+      transparent 360deg);
+}
+
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image::before {
+  display: none !important;
+}
+
+/* The label = the cover, a circle in the middle, spinning. */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image > yt-img-shadow,
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image yt-img-shadow {
+  position: absolute !important;
+  inset: 0 !important;
+  margin: auto !important;
+  width: var(--lg-vinyl-label) !important;
+  height: var(--lg-vinyl-label) !important;
+  max-width: none !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  z-index: 1;
+  animation: lg-vinyl-spin var(--lg-vinyl-spin) linear infinite;
+  animation-play-state: paused;   /* paused = stopped record */
+}
+
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image yt-img-shadow img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+}
+
+/* Grooves over the cover (picture disc), a dark outer edge, a smooth
+   band round the middle and the spindle */
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image yt-img-shadow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center,
+      rgb(0 0 0 / 0.55) 0 6%, rgb(0 0 0 / 0.25) 6% 6.6%, transparent 6.6% 15%,
+      rgb(255 255 255 / 0.10) 15% 15.4%, transparent 15.4% 100%),
+    radial-gradient(circle at center,
+      transparent 0 58%, rgb(0 0 0 / 0.22) 58% 58.6%, transparent 58.6% 72%,
+      rgb(0 0 0 / 0.22) 72% 72.6%, transparent 72.6% 85%,
+      rgb(0 0 0 / 0.22) 85% 85.6%, transparent 85.6% 100%),
+    repeating-radial-gradient(circle at center,
+      rgb(0 0 0 / 0.16) 0 1px, rgb(255 255 255 / 0.035) 1px 2.5px);
+  box-shadow:
+    inset 0 0 0 5px rgb(8 8 10 / 0.92),
+    inset 0 0 0 6px rgb(255 255 255 / 0.10),
+    inset 0 0 36px rgb(0 0 0 / 0.45);
+}
+
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image yt-img-shadow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  z-index: 3;
+  width: 5%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f0f0f0, #6c6c70 70%);
+  box-shadow: 0 0 0 3px rgb(0 0 0 / 0.55);
+}
+
+/* --- PLAYING --------------------------------------------------------------
+   Several signals are checked because YouTube marks the state in different
+   places; any one of them is enough. (The Pause ones are English button
+   labels; the queue / player-bar ones are not language dependent.) */
+ytmusic-app:has(
+  :is(
+    ytmusic-player-bar #play-pause-button[title="Pause"],
+    ytmusic-player-bar #play-pause-button[aria-label="Pause"],
+    ytmusic-player-bar .play-pause-button[title="Pause"],
+    ytmusic-player-bar .play-pause-button[aria-label="Pause"],
+    ytmusic-player-queue-item[selected][play-button-state="playing"],
+    ytmusic-player-queue-item[play-button-state="playing"],
+    ytmusic-player-bar[playing],
+    ytmusic-player-bar[is-playing]
+  )
+) ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image yt-img-shadow {
+  animation-play-state: running;
+}
+
+ytmusic-app:has(
+  :is(
+    ytmusic-player-bar #play-pause-button[title="Pause"],
+    ytmusic-player-bar #play-pause-button[aria-label="Pause"],
+    ytmusic-player-bar .play-pause-button[title="Pause"],
+    ytmusic-player-bar .play-pause-button[aria-label="Pause"],
+    ytmusic-player-queue-item[selected][play-button-state="playing"],
+    ytmusic-player-queue-item[play-button-state="playing"],
+    ytmusic-player-bar[playing],
+    ytmusic-player-bar[is-playing]
+  )
+) ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"])::after {
+  transform: translateZ(22px) rotate(var(--lg-tt-arm-play));
+  /* faster on the way onto the record; the base rule keeps the slower
+     swing back when the song is paused */
+  transition: transform var(--lg-tt-arm-time-play) cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Switching from the mini player to the big player: the tilt is applied at
+   once (YouTube's own animation of this box is switched off here, that is
+   what made the angle swing for a moment) and the turntable fades in once
+   the switch has settled. The fade only holds while it runs (backwards
+   fill), because a lasting opacity effect would flatten the 3D parts. */
+@keyframes lg-tt-appear {
+  0%, 40% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) {
+  transition: none !important;
+}
+
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"])::before,
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"]) #song-image {
+  animation: lg-tt-appear 0.6s ease-out backwards;
+}
+
+ytmusic-app-layout:not([player-fullscreened]) ytmusic-player-page #player:not([video-mode]):not(.video-mode):not([player-ui-state="MINIPLAYER"]):not([player-ui-state="FULLSCREEN"])::after {
+  animation: lg-tt-appear 0.6s ease-out backwards;
+}
+
+/* ==========================================================================
+   Mini player (the small picture above the player bar)
+   Only the outer box is rounded and clipped; YouTube's own sizing of the
+   picture inside is left alone, so the cover always loads.
+   ========================================================================== */
+
+ytmusic-player-page #player[player-ui-state="MINIPLAYER"] {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow:
+    0 14px 34px rgb(0 0 0 / 0.45),
+    0 0 0 1px rgb(255 255 255 / 0.08) !important;
+}
+
+ytmusic-player-page #player[player-ui-state="MINIPLAYER"] #song-image img,
+ytmusic-player-page #player[player-ui-state="MINIPLAYER"] #song-image yt-img-shadow img {
+  object-fit: cover !important;
+}
+
+/* One outline only (the panel), with breathing room for everything inside.
+   Height fills the space between the top bar and the player bar minus the
+   gap on both sides; the transform moves it up from where YouTube puts it. */
+ytmusic-player-page #side-panel {
+  height: calc(
+    100vh - var(--lg-chrome-top) - var(--lg-chrome-bottom) - 2 * var(--lg-queue-gap)
+  ) !important;
+  max-height: calc(
+    100vh - var(--lg-chrome-top) - var(--lg-chrome-bottom) - 2 * var(--lg-queue-gap)
+  ) !important;
+  transform: translateY(calc(var(--lg-queue-gap) - var(--lg-queue-offset)));
+  box-sizing: border-box !important;
+  padding: 0 18px 10px !important;
+  overflow: hidden !important;
+  background: var(--lg-sheen), var(--lg-fill) !important;
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  border: var(--lg-ring) !important;
+  border-radius: var(--lg-radius-l) !important;
+  box-shadow: var(--lg-edge), var(--lg-shadow);
+}
+
+ytmusic-player-page #side-panel ytmusic-player-queue {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Header ("Playing from", Save, Autoplay) gets a little inner padding */
+ytmusic-player-page #side-panel ytmusic-player-queue #queue-header,
+ytmusic-player-page #side-panel ytmusic-player-queue .header {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+/* ==========================================================================
+   Details
+   ========================================================================== */
+
+::selection {
+  background: rgb(var(--lg-light) / 0.30);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.20);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.34);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+}
+
+
+/* ==========================================================================
+   Narrow window: the slide-out menu (hamburger)
+   When the window is small, YouTube turns the sidebar into a drawer with a
+   dark scrim over the whole page. That scrim covered the top row (so the
+   search box could not be clicked), and the drawer had its own copy of the
+   menu button + red logo on top of yours.
+
+   Fix: the drawer (and its scrim) now only covers the area BETWEEN the top
+   row and the floating player bar, it becomes a glass panel, and its
+   duplicate header is hidden. The real menu button, logo and search stay
+   visible and clickable the whole time.
+
+   The 935px below is where YouTube switches to the drawer layout. If the
+   old look still shows in a small band of widths, change that number.
+   ========================================================================== */
+
+@media (max-width: 935px) {
+  tp-yt-app-drawer#guide {
+    --app-drawer-scrim-background: rgba(0, 0, 0, 0.28);
+  }
+
+  /* Drawer + scrim: start under the top row, end above the player bar.
+     z-index stays below the top row (1000) so the search suggestions can
+     still open over the menu. */
+  html body tp-yt-app-drawer#guide {
+    top: var(--lg-chrome-top) !important;
+    bottom: var(--lg-chrome-bottom) !important;
+    height: auto !important;
+    max-height: none !important;
+    z-index: 999 !important;
+  }
+
+  /* The menu itself: one floating glass panel */
+  html body tp-yt-app-drawer#guide #contentContainer {
+    top: 8px !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    height: auto !important;
+    max-width: calc(100vw - 16px) !important;
+    box-sizing: border-box !important;
+    padding: 6px 0 10px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    scroll-behavior: auto !important;
+    touch-action: pan-y !important;
+    pointer-events: auto !important;
+    background: var(--lg-sheen), var(--lg-fill-popup) !important;
+    backdrop-filter: blur(calc(var(--lg-blur) + 6px)) saturate(var(--lg-saturate)) !important;
+    -webkit-backdrop-filter: blur(calc(var(--lg-blur) + 6px)) saturate(var(--lg-saturate)) !important;
+    border: var(--lg-ring) !important;
+    border-radius: var(--lg-radius-l) !important;
+    box-shadow: var(--lg-edge), var(--lg-shadow) !important;
+  }
+
+  /* Everything inside stays see-through so the panel is the only glass */
+  html body tp-yt-app-drawer#guide ytmusic-guide-renderer,
+  html body tp-yt-app-drawer#guide #guide-wrapper {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* ONE scroll area: the panel. YouTube sizes the list inside it to the full
+     window height, which created a second, nested scroller that fought the
+     panel (scrolling down worked, scrolling back up did nothing). The inner
+     parts now just grow to their natural height and the panel scrolls them. */
+  html body tp-yt-app-drawer#guide ytmusic-guide-renderer,
+  html body tp-yt-app-drawer#guide #guide-wrapper,
+  html body tp-yt-app-drawer#guide ytmusic-guide-renderer #sections {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* The drawer's own header (close X, red logo, divider): hidden, because the
+     real menu button and logo in the top row are used instead. Icon buttons
+     inside the menu entries themselves are left alone. */
+  html body tp-yt-app-drawer#guide ytmusic-logo,
+  html body tp-yt-app-drawer#guide a.ytmusic-logo,
+  html body tp-yt-app-drawer#guide #header,
+  html body tp-yt-app-drawer#guide :is(yt-icon-button, tp-yt-paper-icon-button):not(ytmusic-guide-entry-renderer *),
+  html body tp-yt-app-drawer#guide div:has(> :is(yt-icon-button, tp-yt-paper-icon-button)):not(#contentContainer):not(#guide-wrapper):not(ytmusic-guide-entry-renderer *) {
+    display: none !important;
+  }
+}
+
